@@ -41,11 +41,6 @@ rainydays
 #### 2、打包
 
 - 确认你要部署的环境，假设你就一个开发环境：在application.properties配置对应的spring.profiles.active值为dev
-- 如果你需要使用部署其他环境，为防止日志目录引起的启动异常，需要再修改下logback文件，比如你现在要部署测试环境，
-  那么logback-test.xml更新配置：LOG_HOME、cdr-directory-send和ipStr跟你的环境信息同步，修改另外3个文件
-  （logback-dev.xml、logback-prod.xml和logback-sit.xml），把前三项（LOG_HOME、
-  cdr-directory-send和ipStr）改为logback-test.xml中的配置，只需注掉并把logback-test.xml中的前三项拷贝过来粘贴即可，
-  如果是部署生产环境，同理以logback-prod.xml配置为主
 - 配置文件中的eureka客户端地址配置（eureka.client.service-url.defaultZone）与order_monitor项目中的配置项
   eureka.client.service-url.defaultZone保持一致   
 
