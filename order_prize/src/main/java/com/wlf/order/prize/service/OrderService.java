@@ -261,6 +261,56 @@ public class OrderService {
                         OrderErrorCode.UPDATE_STATUS_ERROR.getMsg());
             }
 
+            // 当订单状态为发货中时，要求传产品设备号
+            Long productOldTimeStamp = null;
+            if (storeStatus.equals(LogisticsStatus.STORE_SENDING.getStatus())) {
+
+                // 请求消息体校验
+                if (order.getProducts() == null || order.getProducts().size() <= 0) {
+                    log.error("logistics status is 1, but no products, orderId : {}.", order.getOrderId());
+                    throw new OrderException(OrderErrorCode.STORE_SENDING_NO_PRODUCT.getCode(),
+                            OrderErrorCode.STORE_SENDING_NO_PRODUCT.getMsg());
+                }
+
+                // 确认产品信息是否已存在
+                List<ProductItem> productItems = productDao.findAllByOrderId(order.getOrderId());
+                if (productItems == null || productItems.size() <= 0) {
+                    log.error("logistics status is 1, productItems is empty, orderId : {}.",
+                            order.getOrderId());
+                    throw new OrderException(OrderErrorCode.STORE_SENDING_NO_PRODUCTITEM.getCode(),
+                            OrderErrorCode.STORE_SENDING_NO_PRODUCTITEM.getMsg());
+                }
+
+                // 遍历原产品ID，跟传入的产品做匹配
+                List<String> productIds = new ArrayList<>();
+                productItems.forEach(p -> {
+                    productIds.add(p.getProductId());
+                });
+
+                order.getProducts().forEach(o -> {
+                    if (o.getProductid() == null || o.getEquimentid() == null
+                            || o.getProductid().trim().equals("")
+                            || o.getEquimentid().trim().equals("")) {
+                        log.error("logistics status is 1, productid or equimentid is null, orderId : {}.",
+                                order.getOrderId());
+                        throw new OrderException(OrderErrorCode.STORE_SENDING_NO_EQUIEDID.getCode(),
+                                OrderErrorCode.STORE_SENDING_NO_EQUIEDID.getMsg());
+                    }
+
+                    // 产品匹配
+                    if (!productIds.contains(o.getProductid())) {
+                        log.error("logistics status is 1, productid or original productId not same, " +
+                                        "orderId : {}, productId : {}.",
+                                order.getOrderId(), o.getProductid());
+                        throw new OrderException(OrderErrorCode.STORE_SENDING_NO_PRODUCTITEM.getCode(),
+                                OrderErrorCode.STORE_SENDING_NO_PRODUCTITEM.getMsg());
+                    }
+                });
+
+                // 获取原产品时间戳
+                productOldTimeStamp = productItems.get(0).getTimestamp();
+            }
+
             // 确认该物流信息订单已存在，否则不予出库
             OrderItem orderItem = orderDao.findByOrderId(order.getOrderId());
             if (orderItem == null) {
@@ -300,6 +350,15 @@ public class OrderService {
                     logisticsDao.save(logisticsItem);
                 } else {
                     logisticsDao.updateStatusByOrderId(storeStatus, order.getOrderId(), tmp.getTimestamp(), timestamp);
+
+                    // 发货中，更新设备号到产品表t_product
+                    if (storeStatus.equals(LogisticsStatus.STORE_SENDING.getStatus())) {
+                        for (LogisticsProduct product : order.getProducts()) {
+                            productDao.updateEquitmentIdByOrderIdAndProductId(product.getEquimentid(),
+                                    order.getOrderId(), product.getProductid(), productOldTimeStamp, timestamp);
+
+                        }
+                    }
                 }
             } catch (Exception e) {
                 log.error("db error : {}", e.getMessage());
@@ -613,6 +672,8 @@ public class OrderService {
                     OrderErrorCode.STORE_ORDER_ERROR.getMsg());
         }
 
+        log.info("requestBodyStr is {}", requestBodyStr);
+
         // 构造消息头
         HttpHeaders httpHeaders = createHttpHead("/sale/ng/servicesale/sale/province/order/notify", requestBodyStr);
 
@@ -660,6 +721,7 @@ public class OrderService {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("sign", "shumei");
         httpHeaders.add("token", getSign(getSign(url + requestBodyStr + ng_apiSecret)));
+        httpHeaders.add("Content-Type", "application/json; charset=utf-8");
         return httpHeaders;
     }
 
@@ -702,7 +764,7 @@ public class OrderService {
 
         orders.forEach(o -> {
             // 先确认是否需要重试
-            List<InfoSourceItem> infoSourceItems = infoSourceDao.findAllByOrderId(o.getOrderId());
+            List<InfoSourceItem> infoSourceItems = infoSourceDao.findAllByOrderIdAndResultCode(o.getOrderId(), "00000");
 
             // 重试调用，更新权益开通失败表
             PrizeResponse prizeResponse = null;

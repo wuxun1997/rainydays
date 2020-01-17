@@ -8,7 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface InfoSourceDao extends JpaRepository<InfoSourceItem, Long> {
-    List<InfoSourceItem> findAllByOrderId(String orderId);
+    @Query(value = "select * from t_infosource i where i.order_id = ?1 and i.result_code != ?2", nativeQuery = true)
+    List<InfoSourceItem> findAllByOrderIdAndResultCode(String orderId, String errorCode);
 
     @Modifying
     @Query("update InfoSourceItem i set i.resultCode = ?5, i.errorMsg = ?6, i.failedCount = ?7, i.timestamp = ?4 " +

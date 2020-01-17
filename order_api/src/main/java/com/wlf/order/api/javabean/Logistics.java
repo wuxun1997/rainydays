@@ -2,6 +2,8 @@ package com.wlf.order.api.javabean;
 
 import lombok.*;
 
+import java.util.List;
+
 /**
  * 物流信息
  * @author wulinfeng
@@ -16,6 +18,9 @@ public class Logistics {
 
     // 订单Id
     private String orderId;
+
+    // 产品信息
+    private List<LogisticsProduct> products;
 
     // 用户手机号
     private String serviceNumber;

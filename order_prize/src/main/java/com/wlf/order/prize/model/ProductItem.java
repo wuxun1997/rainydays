@@ -37,6 +37,10 @@ public class ProductItem {
     @Column(length = 32)
     private String productName;
 
+    // 产品设备号
+    @Column(nullable = false, length = 128)
+    private String equipmentId;
+
     // 时间戳
     @Column(length = 13)
     private Long timestamp;

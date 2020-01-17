@@ -1,5 +1,6 @@
 package com.wlf.order.prize.util;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wlf.order.api.javabean.*;
@@ -142,6 +143,7 @@ public class BeanConvert {
      */
     public static String getLogisticsJson(LogisticsOrders logisticsOrders) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         return mapper.writeValueAsString(logisticsOrders);
     }
 

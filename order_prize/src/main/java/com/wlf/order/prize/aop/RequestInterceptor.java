@@ -6,6 +6,7 @@ import com.wlf.order.api.util.OrderErrorCode;
 import com.wlf.order.prize.service.MailService;
 import com.wlf.order.prize.util.*;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -73,6 +74,9 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
             getResponse(result, response);
             return false;
         }
+
+        // 日志添加追踪ID
+        MDC.put("traceId", timestamp);
 
         // 重复请求校验
         if (cache.contains(requestTime)) {

@@ -30,7 +30,10 @@ public enum OrderErrorCode {
     RETURN_PRODUCT_ERROR(11024, "申请退货/完成退货时产品数据不存在"),
     HEARD_EMPTY(11025, "请求头缺失"),
     TIMESTAMP_ERROR(11026, "时间戳格式错误"),
-    REPEAT_REQUEST(11027, "重复请求");
+    REPEAT_REQUEST(11027, "重复请求"),
+    STORE_SENDING_NO_PRODUCT(11028, "更新订单状态为发货中时没有传入产品信息"),
+    STORE_SENDING_NO_PRODUCTITEM(11029, "更新订单状态为发货中时原订单产品跟传入产品对不上"),
+    STORE_SENDING_NO_EQUIEDID(11030, "更新订单状态为发货中时没有传入产品ID或设备号");
 
     private Integer code;
 
